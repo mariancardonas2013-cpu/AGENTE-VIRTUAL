@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guía Penal Colombia (Chat)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background:#f5f6f8; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.08); overflow:hidden; }
+    header { padding: 14px 16px; background: #111827; color:#fff; }
+    header .title { font-weight: 700; }
+    header .sub { opacity:.9; font-size: 13px; margin-top: 6px; }
+    .chat { height: 62vh; padding: 16px; overflow-y: auto; background: #f9fafb; }
+    .row { display:flex; margin: 10px 0; }
+    .row.user { justify-content: flex-end; }
+    .bubble { max-width: 78%; padding: 10px 12px; border-radius: 14px; white-space: pre-wrap; line-height: 1.35; }
+    .user .bubble { background:#2563eb; color:#fff; border-bottom-right-radius: 6px; }
+    .bot .bubble { background:#e5e7eb; color:#111827; border-bottom-left-radius: 6px; }
+    footer { padding: 14px 16px; border-top: 1px solid #e5e7eb; display:flex; gap:10px; align-items:center; background:#fff; }
+    textarea { width: 100%; resize:none; padding: 10px 12px; border-radius: 10px; border: 1px solid #e5e7eb; height: 44px; }
+    button { padding: 10px 14px; border-radius: 10px; border:0; background:#111827; color:#fff; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    .hint { font-size: 12px; color:#6b7280; margin-top: 10px; }
+    .pillbar { display:flex; flex-wrap:wrap; gap:8px; padding: 12px 16px; border-bottom:1px solid #e5e7eb; background:#fff; }
+    .pillbar button { background:#f3f4f6; color:#111827; border:1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div class="title">Guía Penal Colombia (Chat)</div>
+        <div class="sub">Respuestas informativas basadas únicamente en tus extractos. No sustituye asesoría legal.</div>
+      </header>
+
+      <div class="pillbar">
+        <button onclick="sendQuick('¿Qué significa el principio de legalidad en materia penal?')">Legalidad</button>
+        <button onclick="sendQuick('¿Qué es la presunción de inocencia?')">Presunción de inocencia</button>
+        <button onclick="sendQuick('¿Cuáles son derechos de defensa?')">Derecho de defensa</button>
+        <button onclick="sendQuick('¿Qué dice la ley sobre derechos de las víctimas?')">Víctimas</button>
+        <button onclick="sendQuick('¿La ley penal aplica en todo el territorio?')">Territorialidad</button>
+        <button onclick="sendQuick('¿Qué es extradición?')">Extradición</button>
+      </div>
+
+      <div id="chat" class="chat"></div>
+
+      <footer>
+        <textarea id="input" placeholder="Escribe tu pregunta..."></textarea>
+        <button id="btn" onclick="sendMsg()">Enviar</button>
+      </footer>
+      <div style="padding: 0 16px 16px;">
+        <div class="hint">
+          Tip: preguntas como “¿qué es…?”, “¿cuál es el principio…?” o “¿qué significa…?” funcionan mejor.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const btn = document.getElementById('btn');
+
+    function addMessage(text, who) {
+      const row = document.createElement('div');
+      row.className = 'row ' + who;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+
+      row.appendChild(bubble);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+    function answer(question) {
+      const q = normalize(question);
+
+      const citeLey599 = (art) => `Base: Ley 599 de 2000, art. ${art}.`;
+      const citeLey906 = (art) => `Base: Ley 906 de 2004, art. ${art}.`;
+      const citeConst = (art) => `Base: Constitución Política de 1991, art. ${art}.`;
+
+      // Aviso de límites si no coincide con temas del extracto
+      // (pero intentamos igual con categorías por keywords)
+      const unknown = () =>
+        "Con las fuentes que compartiste puedo orientarte sobre principios y garantías generales, pero tu pregunta no coincide claramente con esos artículos en los extractos disponibles. ¿Puedes reformularla hacia: legalidad, presunción de inocencia, derecho de defensa, víctimas, territorialidad o extradición?";
+
+      // LEGALIDAD
+      if (q.includes('legalidad')) {
+        return "En penal, la legalidad significa que nadie puede ser juzgado si no existe una ley previa que defina el hecho y el juez competente debe seguir las formas del proceso.\n\nSi la ley es más favorable (permisiva o favorable), se aplica de preferencia.\n\nBase: Ley 599 de 2000, art. 6.";
+      }
+
+      // PRESUNCION INOCENCIA / CARGA PROBAR
+      if (q.includes('presuncion') || q.includes('inocencia') || q.includes('carga de la prueba') || q.includes('duda')) {
+        return "La presunción de inocencia es que toda persona se considera inocente mientras no exista una decisión judicial definitiva sobre su responsabilidad penal.\n\nAdemás, corresponde al órgano de persecución probar la responsabilidad penal, y la duda debe favorecer al procesado.\n\nBase: Ley 906 de 2004, art. 7.";
+      }
+
+      // DEFENSA (ART 8)
+      if (q.includes('defensa') || q.includes('abogado') || q.includes('silencio') || q.includes('conocer') || q.includes('juicio publico') || q.includes('interrog') ) {
+        return "El derecho de defensa busca que, una vez una persona sea imputada, pueda ejercer su defensa en igualdad frente a la persecución penal.\n\nEn tus extractos aparecen, por ejemplo:\n- No autoincriminarse (no ser obligado a declarar contra sí mismo y ciertos casos relacionados).\n- Tener derecho a conocer cargos imputados.\n- Contar con tiempo y medios adecuados para preparar la defensa.\n- Tener un juicio público, oral, contradictorio, concentrado e imparcial.\n\nBase: Ley 906 de 2004, art. 8.";
+      }
+
+      // VICTIMAS (ART 11)
+      if (q.includes('victima') || q.includes('victimas') || q.includes('reparacion') || q.includes('proteccion') || q.includes('seguridad')) {
+        return "Tus extractos señalan que el Estado garantiza el acceso de las víctimas a la administración de justicia y reconoce derechos como:\n- Trato humano y digno.\n- Protección de su intimidad y de seguridad (y la de sus familiares y testigos).\n- Reparación integral de los daños.\n- Ser oídas e informadas sobre decisiones definitivas.\n\nBase: Ley 906 de 2004, art. 11.";
+      }
+
+      // TERRITORIALIDAD
+      if (q.includes('territorialidad') || q.includes('territorio') || q.includes('aplica') && (q.includes('ley penal') || q.includes('colombiana'))) {
+        return "En general, la ley penal colombiana se aplica a quien infrinja la ley en el territorio nacional.\n\nLa conducta se considera realizada, por ejemplo:\n1) Donde se desarrolló total o parcialmente la acción.\n2) Donde debió realizarse la acción omitida.\n3) Donde se produjo o debió producirse el resultado.\n\nBase: Ley 599 de 2000, art. 14.";
+      }
+
+      // EXTRADICION
+      if (q.includes('extradicion') || q.includes('extraditar')) {
+        return "La extradición se puede solicitar, conceder u ofrecer según tratados, y en su defecto según la ley.\n\nEn los extractos también se indica que:\n- No procede por delitos políticos.\n- No procede para hechos cometidos antes de la promulgación del Acto Legislativo 01 de 1997.\n\nBase: Ley 599 de 2000, art. 18.";
+      }
+
+      // DIGNIDAD / PRINCIPIOS GENERALES
+      if (q.includes('dignidad') || q.includes('principio') || q.includes('necesidad') || q.includes('proporcionalidad') || q.includes('razonabilidad')) {
+        return "El derecho penal tiene como fundamento el respeto a la dignidad humana.\n\nLas sanciones deben responder a principios como necesidad, proporcionalidad y razonabilidad.\n\nBase: Ley 599 de 2000, arts. 1 y 3.";
+      }
+
+      // PRESENCIA CONSTITUCIONAL (por si preguntan marco)
+      if (q.includes('constitucion') || q.includes('estado social') || q.includes('derechos')) {
+        return "Según la Constitución, Colombia es un Estado social de derecho, basado en la dignidad humana, y con autoridades instituidas para proteger a las personas y asegurar la vigencia de un orden justo.\n\nBase: Constitución Política de 1991, art. 1 y 2 (según extracto).";
+      }
+
+      // DOBLE INCRIMINACION
+      if (q.includes('doble') && (q.includes('incrimin') || q.includes('incriminacion') || q.includes('sancion'))) {
+        return "La prohibición de doble incriminación indica que a una persona no se le puede imputar más de una vez la misma conducta punible (salvo lo previsto en instrumentos internacionales).\n\nBase: Ley 599 de 2000, art. 8.";
+      }
+
+      // TIPICIDAD / ANTIJURIDICIDAD / CULPABILIDAD (genéricas)
+      if (q.includes('tipicidad')) {
+        return "La tipicidad exige que la ley penal defina de manera clara las características básicas del tipo penal (lo que se entiende como delito).\n\nBase: Ley 599 de 2000, art. 10.";
+      }
+      if (q.includes('antijur') || q.includes('antijuridic')) {
+        return "Para que una conducta típica sea punible, debe lesionar o poner efectivamente en peligro el bien jurídicamente tutelado, sin justa causa.\n\nBase: Ley 599 de 2000, art. 11.";
+      }
+      if (q.includes('culpabilidad') || q.includes('responsabilidad objetiva')) {
+        return "En tus extractos, solo se pueden imponer penas por conductas realizadas con culpabilidad, y se elimina toda forma de responsabilidad objetiva.\n\nBase: Ley 599 de 2000, art. 12.";
+      }
+
+      // Si no coincide:
+      return unknown();
+    }
+
+    function sendMsg() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      input.value = '';
+      btn.disabled = true;
+
+      // Simulación de “pensando”
+      const thinking = document.createElement('div');
+      thinking.className = 'row bot';
+      thinking.innerHTML = '<div class="bubble">Escribiendo respuesta...</div>';
+      chat.appendChild(thinking);
+      chat.scrollTop = chat.scrollHeight;
+
+      setTimeout(() => {
+        thinking.remove();
+        const resp = answer(text);
+        addMessage(resp, 'bot');
+        btn.disabled = false;
+      }, 500);
+    }
+
+    function sendQuick(q) {
+      input.value = q;
+      sendMsg();
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMsg();
+      }
+    });
+
+    // Mensaje inicial
+    addMessage("Hola 👋 Soy una guía informativa sobre sistema penal colombiano con base en los extractos que compartiste. ¿Qué pregunta tienes?", "bot");
+  </script>
+</body>
+</html>
